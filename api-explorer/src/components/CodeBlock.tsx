@@ -19,13 +19,16 @@ export function CodeBlock({ code, lang = "json" }: CodeBlockProps) {
       .catch(() => setErr(true));
   }, [code, lang]);
 
+  const blockClass =
+    "font-mono text-xs bg-bg border border-border rounded-md px-3 py-2 overflow-x-auto whitespace-pre-wrap break-words m-0";
   if (err) {
-    return (
-      <pre className="code-block code-block-fallback">
-        <code>{code}</code>
-      </pre>
-    );
+    return <pre className={blockClass}><code>{code}</code></pre>;
   }
-  if (!html) return <pre className="code-block">Loading…</pre>;
-  return <div className="code-block shiki" dangerouslySetInnerHTML={{ __html: html }} />;
+  if (!html) return <pre className={blockClass}>Loading…</pre>;
+  return (
+    <div
+      className={`${blockClass} [&_pre]:m-0 [&_pre]:!bg-transparent`}
+      dangerouslySetInnerHTML={{ __html: html }}
+    />
+  );
 }

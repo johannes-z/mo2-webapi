@@ -53,36 +53,43 @@ export function TryItInline({ baseUrl, method, defaultPath, defaultBody }: TryIt
     }
   }
 
+  const responseBorder =
+    responseOk === true ? "border-get" : responseOk === false ? "border-delete" : "border-border";
+
   return (
-    <div className="try-inline">
-      <label>
+    <div className="mt-4 pt-4 border-t border-border">
+      <label className="block mt-2 text-sm text-muted first:mt-0">
         Path
         <input
           type="text"
-          className="try-path"
+          className="w-full mt-0.5 px-2.5 py-1.5 bg-bg border border-border rounded-md text-text font-mono text-sm block"
           value={path}
           onChange={(e) => setPath(e.target.value)}
         />
       </label>
       {["POST", "PATCH", "PUT"].includes(method) && (
-        <label>
+        <label className="block mt-2 text-sm text-muted">
           Body
           <textarea
-            className="try-body"
+            className="w-full mt-0.5 px-2.5 py-1.5 bg-bg border border-border rounded-md text-text font-mono text-sm min-h-20 resize-y block"
             value={body}
             onChange={(e) => setBody(e.target.value)}
             rows={4}
           />
         </label>
       )}
-      <button type="button" className="try-send" onClick={handleSend}>
+      <button
+        type="button"
+        className="mt-3 px-4 py-1.5 bg-accent text-white rounded-md text-sm font-semibold cursor-pointer hover:bg-accent-hover"
+        onClick={handleSend}
+      >
         Send
       </button>
       <div
-        className={`try-response ${responseOk === true ? "ok" : ""} ${responseOk === false ? "error" : ""}`}
+        className={`mt-3 min-h-12 text-sm border rounded-md p-3 whitespace-pre-wrap border-border [&>div]:m-0 [&>div]:border-0 [&>pre]:m-0 [&>pre]:border-0 ${responseBorder}`}
       >
         {response === "(click Send)" || response === "Loading…" ? (
-          <pre className="try-response-plain">{response}</pre>
+          <pre className="text-sm text-muted m-0">{response}</pre>
         ) : (
           <CodeBlock code={response} lang={responseLang(response)} />
         )}

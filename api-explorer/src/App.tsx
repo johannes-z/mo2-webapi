@@ -25,9 +25,9 @@ export function App() {
   }, []);
 
   return (
-    <div className="container">
-      <h1>MO2 WebAPI</h1>
-      <p className="subtitle">API overview for Mod Organizer 2.</p>
+    <div className="max-w-200 mx-auto">
+      <h1 className="text-xl font-semibold tracking-tight mb-1">MO2 WebAPI</h1>
+      <p className="text-sm text-muted mb-6">API overview for Mod Organizer 2.</p>
       <BaseUrlInput value={baseUrl} onChange={setBaseUrl} />
       {sections.map((section) => (
         <ApiSection key={section.title} section={section} baseUrl={baseUrl} />
