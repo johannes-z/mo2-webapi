@@ -7,9 +7,14 @@ __pycache__/
 *.log
 logs/
 
-# Frontend
-frontend/node_modules/
-frontend/.vite/
+# Monorepo / Frontend
+plugin/dist/
+api-explorer/dist/
+frontend/dist/
+release/
+.vite/
+dist/
+node_modules/
 
 # IDEs
 .vscode/

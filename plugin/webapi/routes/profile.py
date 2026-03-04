@@ -57,26 +57,7 @@ def list_profiles():
 		if d.is_dir() and (d / "modlist.txt").exists()
 	])
 
-	return jsonify({"current": current, "profiles": profiles})
-
-
-@bp.route("/profiles/<path:profile_name>", methods=["GET"])
-def get_profile_detail(profile_name: str):
-	organizer = context.get_organizer()
-	if not organizer:
-		return jsonify({"error": "Organizer not initialized"}), 500
-	profile_dir = Path(organizer.profilePath()).parent / profile_name
-	if not profile_dir.is_dir():
-		return jsonify({"error": f"Profile '{profile_name}' not found"}), 404
-	mods = _parse_modlist(profile_dir)
-	if mods is None:
-		return jsonify({"error": f"Profile '{profile_name}' has no modlist.txt"}), 404
-	current = organizer.profileName()
-	return jsonify({
-		"name": profile_name,
-		"isCurrent": profile_name == current,
-		"mods": mods,
-	})
+	return jsonify(profiles)
 
 
 @bp.route("/profiles/<path:profile_name>/activate", methods=["POST"])

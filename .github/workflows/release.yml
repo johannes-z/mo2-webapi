@@ -1,0 +1,38 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build frontend and api-explorer
+        run: bun run build
+
+      - name: Create release zip
+        run: |
+          mkdir -p release/mo2-webapi-plugin
+          cp -r plugin/* release/mo2-webapi-plugin/
+          cd release && zip -r "mo2-webapi-plugin-${{ github.ref_name }}.zip" mo2-webapi-plugin
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release/mo2-webapi-plugin-${{ github.ref_name }}.zip
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

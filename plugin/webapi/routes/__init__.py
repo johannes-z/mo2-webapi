@@ -6,10 +6,8 @@ from .. import config
 
 def register_routes(app: Flask) -> None:
 	from . import mods, health, profile, static
+	# Static first so /api-docs and / are served before any other route
+	app.register_blueprint(static.bp)
 	app.register_blueprint(mods.bp)
 	app.register_blueprint(health.bp)
 	app.register_blueprint(profile.bp)
-	app.register_blueprint(static.bp)
-	if config.DEV_ENDPOINT_ENABLED:
-		from . import dev
-		app.register_blueprint(dev.bp)

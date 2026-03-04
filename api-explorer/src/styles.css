@@ -1,0 +1,287 @@
+:root {
+  --bg: #0f0f12;
+  --surface: #18181c;
+  --border: #2a2a30;
+  --text: #e4e4e7;
+  --text-muted: #a1a1aa;
+  --accent: #7c3aed;
+  --accent-hover: #8b5cf6;
+  --get: #22c55e;
+  --post: #3b82f6;
+  --patch: #f59e0b;
+  --put: #8b5cf6;
+  --delete: #ef4444;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family:
+    system-ui,
+    -apple-system,
+    Segoe UI,
+    sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  margin: 0;
+  padding: 2rem 1rem 4rem;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 820px;
+  margin: 0 auto;
+}
+
+h1 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  margin-bottom: 2rem;
+}
+
+.section-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin: 2rem 0 0.75rem;
+  padding-bottom: 0.25rem;
+}
+
+.endpoint {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  overflow: hidden;
+}
+
+.endpoint summary {
+  list-style: none;
+  padding: 0.85rem 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 500;
+}
+
+.endpoint summary::-webkit-details-marker {
+  display: none;
+}
+
+.endpoint summary::before {
+  content: "▶";
+  font-size: 0.65rem;
+  opacity: 0.6;
+  transition: transform 0.15s ease;
+}
+
+.endpoint[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.method {
+  font-family: ui-monospace, "Cascadia Code", "Consolas", monospace;
+  font-size: 0.7rem;
+  font-weight: 500;
+  padding: 0.2rem 0.45rem;
+  border-radius: 4px;
+  min-width: 3.2rem;
+  text-align: center;
+}
+
+.method.get {
+  background: rgba(34, 197, 94, 0.2);
+  color: var(--get);
+}
+.method.post {
+  background: rgba(59, 130, 246, 0.2);
+  color: var(--post);
+}
+.method.patch {
+  background: rgba(245, 158, 11, 0.2);
+  color: var(--patch);
+}
+.method.put {
+  background: rgba(139, 92, 246, 0.2);
+  color: var(--put);
+}
+.method.delete {
+  background: rgba(239, 68, 68, 0.2);
+  color: var(--delete);
+}
+
+.path {
+  font-family: ui-monospace, "Cascadia Code", "Consolas", monospace;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.endpoint-body {
+  padding: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.endpoint-body > .endpoint-docs > div {
+  margin-top: 1rem;
+}
+.endpoint-body > .endpoint-docs > div:first-child {
+  margin-top: 0;
+}
+
+.endpoint-body h4 {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin: 0.75rem 0 0.35rem;
+}
+.endpoint-body h4:first-child {
+  margin-top: 0;
+}
+
+.endpoint-body p {
+  margin: 0.75rem 0 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+.endpoint-body p:first-child {
+  margin-top: 0;
+}
+
+.code-block,
+.code-block-fallback {
+  font-family: ui-monospace, "Cascadia Code", "Consolas", monospace;
+  font-size: 0.8rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  margin: 0;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.code-block.shiki {
+  padding: 0.75rem 1rem;
+}
+.code-block.shiki pre {
+  margin: 0;
+  background: transparent !important;
+}
+
+.try-open {
+  margin-top: 1rem;
+  padding: 0.4rem 0.85rem;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.try-open:hover {
+  background: var(--accent-hover);
+}
+
+.try-inline {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+.try-inline label {
+  display: block;
+  margin-top: 0.6rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+.try-inline input,
+.try-inline textarea {
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  margin-top: 0.2rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: ui-monospace, "Cascadia Code", "Consolas", monospace;
+  font-size: 0.85rem;
+}
+.try-inline textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+.try-inline .try-send {
+  margin-top: 0.75rem;
+  padding: 0.45rem 1rem;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.try-inline .try-send:hover {
+  background: var(--accent-hover);
+}
+.try-inline .try-response {
+  margin-top: 0.75rem;
+  min-height: 3rem;
+  font-size: 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.try-inline .try-response.ok {
+  border-color: var(--get);
+}
+.try-inline .try-response.error {
+  border-color: var(--delete);
+}
+.try-inline .try-response .code-block {
+  margin: 0;
+  border: none;
+  border-radius: 4px;
+}
+.try-inline .try-response-plain {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.base-url-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+.base-url-row input {
+  flex: 1;
+  max-width: 320px;
+  padding: 0.4rem 0.6rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: ui-monospace, "Cascadia Code", "Consolas", monospace;
+  font-size: 0.9rem;
+}

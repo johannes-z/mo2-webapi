@@ -10,7 +10,7 @@ _DEFAULTS = {
 		"websocket_port": "5001",
 	},
 	"frontend": {
-		"dist_dir": "frontend/dist",
+		"dist_dir": "dist",
 	},
 	"logging": {
 		"level": "INFO",
@@ -48,8 +48,18 @@ _cfg = _load_config()
 HTTP_PORT = _cfg.getint("server", "http_port")
 WEBSOCKET_PORT = _cfg.getint("server", "websocket_port")
 
-# Frontend
-FRONTEND_DIST_DIR = _cfg.get("frontend", "dist_dir")
+# Frontend: use combined "dist" (frontend + api-docs); migrate old "frontend/dist"
+_raw_dist = _cfg.get("frontend", "dist_dir")
+if _raw_dist.strip().lower() in ("frontend/dist", "frontend\\dist"):
+	FRONTEND_DIST_DIR = "dist"
+	_cfg.set("frontend", "dist_dir", "dist")
+	try:
+		with open(_CONFIG_PATH, "w", encoding="utf-8") as f:
+			_cfg.write(f)
+	except OSError:
+		pass
+else:
+	FRONTEND_DIST_DIR = _raw_dist
 
 # Logging (DEBUG, INFO, WARNING, ERROR, CRITICAL)
 LOG_LEVEL = _cfg.get("logging", "level")
