@@ -13,9 +13,9 @@ _plugin_dir = Path(__file__).resolve().parent
 if str(_plugin_dir) not in sys.path:
 	sys.path.insert(0, str(_plugin_dir))
 
-_flask_lib = _plugin_dir / "flask_lib"
-if _flask_lib.is_dir() and str(_flask_lib) not in sys.path:
-	sys.path.insert(0, str(_flask_lib))
+_webapi_lib = _plugin_dir / "webapi_lib"
+if _webapi_lib.is_dir() and str(_webapi_lib) not in sys.path:
+	sys.path.insert(0, str(_webapi_lib))
 
 from webapi.plugin import WebAPIPlugin
 

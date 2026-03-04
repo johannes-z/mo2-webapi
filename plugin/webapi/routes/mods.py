@@ -1,43 +1,44 @@
 from functools import wraps
 
 import mobase
-from flask import Blueprint, jsonify, request
+from fastapi import APIRouter, Request
+from fastapi.responses import JSONResponse, Response
 
 from .. import context
 from ..organizer import mod_helper, db_helper
 from ..log import log
 
-bp = Blueprint("mods", __name__)
+router = APIRouter(tags=["Mods"])
 
 
 def _require_organizer(f):
 	@wraps(f)
-	def wrapper(*args, **kwargs):
+	async def wrapper(*args, **kwargs):
 		if not context.get_organizer():
-			return jsonify({"error": "Organizer not initialized"}), 500
-		return f(*args, **kwargs)
+			return JSONResponse(content={"error": "Organizer not initialized"}, status_code=500)
+		return await f(*args, **kwargs)
 	return wrapper
 
 
 def _validate_mod(mod_name: str):
 	organizer = context.get_organizer()
 	if not organizer:
-		return None, (jsonify({"error": "Organizer not initialized"}), 500)
+		return None, JSONResponse(content={"error": "Organizer not initialized"}, status_code=500)
 	mod_list = organizer.modList()
 	mod = mod_list.getMod(mod_name)
 	if not mod:
-		return None, (jsonify({"error": f"Mod '{mod_name}' not found"}), 404)
+		return None, JSONResponse(content={"error": f"Mod '{mod_name}' not found"}, status_code=404)
 	return mod, None
 
 
-def _get_json_field(field: str, required_type=None):
-	"""Extract a field from JSON body. Returns (value, error_response)."""
-	data = request.get_json()
-	value = data.get(field) if data else None
+def _get_json_field(data: dict | None, field: str, required_type=None):
+	if data is None:
+		data = {}
+	value = data.get(field)
 	if value is None:
-		return None, (jsonify({"error": f"Missing '{field}' parameter"}), 400)
+		return None, JSONResponse(content={"error": f"Missing '{field}' parameter"}, status_code=400)
 	if required_type and not isinstance(value, required_type):
-		return None, (jsonify({"error": f"Invalid '{field}' parameter (must be {required_type.__name__})"}), 400)
+		return None, JSONResponse(content={"error": f"Invalid '{field}' parameter (must be {required_type.__name__})"}, status_code=400)
 	return value, None
 
 
@@ -61,7 +62,6 @@ def _get_mods_filtered(filter_fn=None) -> list:
 
 
 def _get_mod_names_by_priority(mod_list: mobase.IModList) -> list[str]:
-	# MO2 can throw invalid mod index after deletes; fall back to unsorted allMods
 	try:
 		return list(mod_list.allModsByProfilePriority())
 	except RuntimeError as e:
@@ -69,11 +69,11 @@ def _get_mod_names_by_priority(mod_list: mobase.IModList) -> list[str]:
 		return list(mod_list.allMods())
 
 
-# --- List endpoints ---
+# --- List (specific paths first) ---
 
-@bp.route("/mods/list", methods=["GET"])
+@router.get("/mods/list")
 @_require_organizer
-def get_mods_list():
+async def get_mods_list():
 	organizer = context.get_organizer()
 	mod_list = organizer.modList()
 	mods = []
@@ -86,30 +86,30 @@ def get_mods_list():
 			"isEnabled": bool(state & mobase.ModState.ACTIVE),
 			"priority": priority,
 		})
-	return jsonify(mods)
+	return mods
 
 
-@bp.route("/mods", methods=["GET"])
+@router.get("/mods")
 @_require_organizer
-def get_mods():
-	return jsonify(_get_mods_filtered())
+async def get_mods():
+	return _get_mods_filtered()
 
 
-@bp.route("/mods/enabled", methods=["GET"])
+@router.get("/mods/enabled")
 @_require_organizer
-def get_enabled_mods():
-	return jsonify(_get_mods_filtered(lambda state: state & mobase.ModState.ACTIVE))
+async def get_enabled_mods():
+	return _get_mods_filtered(lambda state: state & mobase.ModState.ACTIVE)
 
 
-@bp.route("/mods/disabled", methods=["GET"])
+@router.get("/mods/disabled")
 @_require_organizer
-def get_disabled_mods():
-	return jsonify(_get_mods_filtered(lambda state: not (state & mobase.ModState.ACTIVE)))
+async def get_disabled_mods():
+	return _get_mods_filtered(lambda state: not (state & mobase.ModState.ACTIVE))
 
 
-@bp.route("/mods/priority", methods=["GET"])
+@router.get("/mods/priority")
 @_require_organizer
-def get_mods_priority():
+async def get_mods_priority():
 	organizer = context.get_organizer()
 	mod_list = organizer.modList()
 	priorities = [
@@ -117,17 +117,15 @@ def get_mods_priority():
 		for name in _get_mod_names_by_priority(mod_list)
 		if mod_list.getMod(name)
 	]
-	return jsonify(priorities)
+	return priorities
 
 
-# --- Query endpoints ---
-
-@bp.route("/mods/search", methods=["GET"])
+@router.get("/mods/search")
 @_require_organizer
-def search_mods():
-	query = request.args.get("q", "").lower()
+async def search_mods(q: str = ""):
+	query = q.lower()
 	if not query:
-		return jsonify({"error": "Missing 'q' query parameter"}), 400
+		return JSONResponse(content={"error": "Missing 'q' query parameter"}, status_code=400)
 	organizer = context.get_organizer()
 	mod_list = organizer.modList()
 	mods = [
@@ -135,93 +133,86 @@ def search_mods():
 		if query in name.lower()
 		and (info := mod_helper.get_mod_info(organizer, name))
 	]
-	return jsonify(mods)
+	return mods
 
 
-@bp.route("/mods/meta", methods=["GET"])
+@router.get("/mods/meta")
 @_require_organizer
-def get_all_mods_meta():
-	return jsonify(db_helper.read_all_metadata())
+async def get_all_mods_meta():
+	return db_helper.read_all_metadata()
 
 
-@bp.route("/mods/<path:mod_name>", methods=["GET"])
+# --- Conflicts ---
+
+@router.get("/mods/conflicts")
 @_require_organizer
-def get_mod_info_endpoint(mod_name: str):
-	mod_info = mod_helper.get_mod_info(context.get_organizer(), mod_name)
-	if not mod_info:
-		return jsonify({"error": f"Mod '{mod_name}' not found"}), 404
-	return jsonify(mod_info)
-
-
-# --- Conflict endpoints ---
-
-@bp.route("/mods/conflicts", methods=["GET"])
-@_require_organizer
-def get_all_conflicts():
-	"""Get conflict summaries for all mods.
-
-	If cache is stale, recomputes (may take a moment for large mod lists).
-	Use ?refresh=true to force recomputation.
-	"""
-	refresh = request.args.get("refresh", "").lower() in ("true", "1")
+async def get_all_conflicts(refresh: str = ""):
 	organizer = context.get_organizer()
-	if mod_helper.is_conflicts_stale() or refresh:
+	if mod_helper.is_conflicts_stale() or refresh.lower() in ("true", "1"):
 		mod_helper.compute_conflict_summaries(organizer)
-	return jsonify(mod_helper.get_all_conflict_summaries())
+	return mod_helper.get_all_conflict_summaries()
 
 
-@bp.route("/mods/<path:mod_name>/conflicts", methods=["GET"])
+@router.get("/mods/{mod_name:path}/conflicts")
 @_require_organizer
-def get_mod_conflicts(mod_name: str):
+async def get_mod_conflicts(mod_name: str, refresh: str = ""):
 	_, error = _validate_mod(mod_name)
 	if error:
 		return error
 	organizer = context.get_organizer()
-	refresh = request.args.get("refresh", "").lower() in ("true", "1")
-	if mod_helper.is_conflicts_stale() or refresh:
+	if mod_helper.is_conflicts_stale() or refresh.lower() in ("true", "1"):
 		mod_helper.compute_conflict_summaries(organizer)
-	return jsonify(mod_helper.get_mod_conflicts(organizer, mod_name))
+	return mod_helper.get_mod_conflicts(organizer, mod_name)
 
 
-# --- State modification endpoints ---
+# --- State modification ---
 
-@bp.route("/mods/enable", methods=["PATCH"])
+async def _body_json(request: Request) -> dict | list | None:
+	try:
+		return await request.json()
+	except Exception:
+		return None
+
+
+@router.patch("/mods/enable")
 @_require_organizer
-def enable_mod():
-	name, error = _get_json_field("name")
+async def enable_mod(request: Request):
+	data = await _body_json(request)
+	name, error = _get_json_field(data, "name")
 	if error:
 		return error
 	context.get_task_executor().submit(mod_helper.set_mod_active_fn(name, True))
-	return ("", 200)
+	return Response(status_code=200)
 
 
-@bp.route("/mods/disable", methods=["PATCH"])
+@router.patch("/mods/disable")
 @_require_organizer
-def disable_mod():
-	name, error = _get_json_field("name")
+async def disable_mod(request: Request):
+	data = await _body_json(request)
+	name, error = _get_json_field(data, "name")
 	if error:
 		return error
 	context.get_task_executor().submit(mod_helper.set_mod_active_fn(name, False))
-	return ("", 200)
+	return Response(status_code=200)
 
 
-@bp.route("/mods/toggle", methods=["PATCH"])
+@router.patch("/mods/toggle")
 @_require_organizer
-def toggle_mod():
-	name, error = _get_json_field("name")
+async def toggle_mod(request: Request):
+	data = await _body_json(request)
+	name, error = _get_json_field(data, "name")
 	if error:
 		return error
 	context.get_task_executor().submit(mod_helper.toggle_mod_fn(name))
-	return ("", 200)
+	return Response(status_code=200)
 
 
-@bp.route("/mods/state", methods=["PATCH"])
+@router.patch("/mods/state")
 @_require_organizer
-def set_mods_state():
-	data = request.get_json()
+async def set_mods_state(request: Request):
+	data = await _body_json(request)
 	if not isinstance(data, list) or not data:
-		return jsonify({"error": "Request body must be a non-empty array"}), 400
-
+		return JSONResponse(content={"error": "Request body must be a non-empty array"}, status_code=400)
 	errors = []
 	for idx, item in enumerate(data):
 		if not isinstance(item, dict):
@@ -237,142 +228,150 @@ def set_mods_state():
 			continue
 		context.get_task_executor().submit(mod_helper.set_mod_active_fn(name, state))
 	if errors:
-		return jsonify({"errors": errors}), 400
-	return ("", 200)
+		return JSONResponse(content={"errors": errors}, status_code=400)
+	return Response(status_code=200)
 
 
-@bp.route("/mods/set-priority", methods=["PATCH"])
+@router.patch("/mods/set-priority")
 @_require_organizer
-def set_priority():
-	name, error = _get_json_field("name")
+async def set_priority(request: Request):
+	data = await _body_json(request) or {}
+	name, error = _get_json_field(data, "name")
 	if error:
 		return error
-
-	data = request.get_json()
-	priority = data.get("priority") if data else None
+	priority = data.get("priority")
 	if priority is None:
-		return jsonify({"error": "Missing 'priority' parameter"}), 400
+		return JSONResponse(content={"error": "Missing 'priority' parameter"}, status_code=400)
 	try:
 		priority = int(priority)
 	except (ValueError, TypeError):
-		return jsonify({"error": "Invalid priority value, must be an integer"}), 400
-
+		return JSONResponse(content={"error": "Invalid priority value, must be an integer"}, status_code=400)
 	context.get_task_executor().submit(mod_helper.set_mod_priority_fn(name, priority))
-	return ("", 200)
+	return Response(status_code=200)
 
 
-@bp.route("/mods/<path:mod_name>/rename", methods=["PATCH"])
+@router.patch("/mods/{mod_name:path}/rename")
 @_require_organizer
-def rename_mod(mod_name: str):
+async def rename_mod(mod_name: str, request: Request):
 	_, error = _validate_mod(mod_name)
 	if error:
 		return error
-	new_name, error = _get_json_field("newName")
+	data = await _body_json(request)
+	new_name, error = _get_json_field(data, "newName")
 	if error:
 		return error
-	if not new_name or not new_name.strip():
-		return jsonify({"error": "newName cannot be empty"}), 400
-	new_name = new_name.strip()
+	if not new_name or not str(new_name).strip():
+		return JSONResponse(content={"error": "newName cannot be empty"}, status_code=400)
+	new_name = str(new_name).strip()
 	if context.get_organizer().modList().getMod(new_name):
-		return jsonify({"error": f"Mod '{new_name}' already exists"}), 409
+		return JSONResponse(content={"error": f"Mod '{new_name}' already exists"}, status_code=409)
 	context.get_task_executor().submit(mod_helper.rename_mod_fn(mod_name, new_name))
-	return ("", 200)
+	return Response(status_code=200)
 
 
-@bp.route("/mods/<path:mod_name>", methods=["DELETE"])
+@router.delete("/mods/{mod_name:path}")
 @_require_organizer
-def remove_mod(mod_name: str):
+async def remove_mod(mod_name: str):
 	_, error = _validate_mod(mod_name)
 	if error:
 		return error
 	context.get_task_executor().submit(mod_helper.remove_mod_fn(mod_name))
-	return ("", 200)
+	return Response(status_code=200)
 
 
-@bp.route("/mods/enable-batch", methods=["PATCH"])
+@router.patch("/mods/enable-batch")
 @_require_organizer
-def enable_batch():
-	names, error = _get_json_field("names", required_type=list)
+async def enable_batch(request: Request):
+	data = await _body_json(request)
+	names, error = _get_json_field(data, "names", required_type=list)
 	if error:
 		return error
 	for name in names:
 		context.get_task_executor().submit(mod_helper.set_mod_active_fn(name, True))
-	return ("", 200)
+	return Response(status_code=200)
 
 
-@bp.route("/mods/disable-batch", methods=["PATCH"])
+@router.patch("/mods/disable-batch")
 @_require_organizer
-def disable_batch():
-	names, error = _get_json_field("names", required_type=list)
+async def disable_batch(request: Request):
+	data = await _body_json(request)
+	names, error = _get_json_field(data, "names", required_type=list)
 	if error:
 		return error
 	for name in names:
 		context.get_task_executor().submit(mod_helper.set_mod_active_fn(name, False))
-	return ("", 200)
+	return Response(status_code=200)
 
 
-# --- Metadata endpoints ---
+# --- Metadata ---
 
-@bp.route("/mods/<path:mod_name>/meta", methods=["GET"])
+@router.get("/mods/{mod_name:path}/meta")
 @_require_organizer
-def get_mod_meta(mod_name: str):
+async def get_mod_meta(mod_name: str):
 	_, error = _validate_mod(mod_name)
 	if error:
 		return error
-	return jsonify(db_helper.read_mod_metadata(mod_name))
+	return db_helper.read_mod_metadata(mod_name)
 
 
-@bp.route("/mods/<path:mod_name>/meta/<key>", methods=["GET"])
+@router.get("/mods/{mod_name:path}/meta/{key}")
 @_require_organizer
-def get_mod_meta_key(mod_name: str, key: str):
+async def get_mod_meta_key(mod_name: str, key: str):
 	_, error = _validate_mod(mod_name)
 	if error:
 		return error
 	value = db_helper.read_meta_value(mod_name, key)
 	if value is None:
-		return jsonify({"error": f"Key '{key}' not found"}), 404
-	return jsonify({"mod": mod_name, "key": key, "value": value})
+		return JSONResponse(content={"error": f"Key '{key}' not found"}, status_code=404)
+	return {"mod": mod_name, "key": key, "value": value}
 
 
-@bp.route("/mods/<path:mod_name>/meta", methods=["PATCH"])
+@router.patch("/mods/{mod_name:path}/meta")
 @_require_organizer
-def set_mod_meta(mod_name: str):
+async def set_mod_meta(mod_name: str, request: Request):
 	_, error = _validate_mod(mod_name)
 	if error:
 		return error
-
-	data = request.get_json()
+	data = await _body_json(request)
 	if not data:
-		return jsonify({"error": "Request body required"}), 400
-
+		return JSONResponse(content={"error": "Request body required"}, status_code=400)
 	values = data.get("data")
 	if not values or not isinstance(values, dict):
-		return jsonify({"error": "Missing or invalid 'data' parameter (must be object with key=value pairs)"}), 400
-
+		return JSONResponse(content={"error": "Missing or invalid 'data' parameter (must be object with key=value pairs)"}, status_code=400)
 	context.get_task_executor().submit(db_helper.write_meta_values_fn(mod_name, values))
-	return ("", 200)
+	return Response(status_code=200)
 
 
-@bp.route("/mods/<path:mod_name>/meta/<key>", methods=["PUT"])
+@router.put("/mods/{mod_name:path}/meta/{key}")
 @_require_organizer
-def set_mod_meta_key(mod_name: str, key: str):
+async def set_mod_meta_key(mod_name: str, key: str, request: Request):
 	_, error = _validate_mod(mod_name)
 	if error:
 		return error
-
-	value, err = _get_json_field("value")
+	data = await _body_json(request)
+	value, err = _get_json_field(data, "value")
 	if err:
 		return err
-
 	context.get_task_executor().submit(db_helper.write_meta_value_fn(mod_name, key, str(value)))
-	return ("", 200)
+	return Response(status_code=200)
 
 
-@bp.route("/mods/<path:mod_name>/meta/<key>", methods=["DELETE"])
+@router.delete("/mods/{mod_name:path}/meta/{key}")
 @_require_organizer
-def delete_mod_meta_key(mod_name: str, key: str):
+async def delete_mod_meta_key(mod_name: str, key: str):
 	_, error = _validate_mod(mod_name)
 	if error:
 		return error
 	context.get_task_executor().submit(db_helper.delete_meta_key_fn(mod_name, key))
-	return ("", 200)
+	return Response(status_code=200)
+
+
+# --- Single mod info (must be last: /mods/{mod_name:path} would match /mods/list etc.) ---
+
+@router.get("/mods/{mod_name:path}")
+@_require_organizer
+async def get_mod_info_endpoint(mod_name: str):
+	mod_info = mod_helper.get_mod_info(context.get_organizer(), mod_name)
+	if not mod_info:
+		return JSONResponse(content={"error": f"Mod '{mod_name}' not found"}, status_code=404)
+	return mod_info

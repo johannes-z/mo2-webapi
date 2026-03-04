@@ -26,7 +26,8 @@ Thumbs.db
 # MO2 specific
 *.bak
 
-# Dependencies
+# Dependencies (bundled for MO2 embedded Python)
+webapi_lib/
 flask_lib/
 
 mod_metadata.json

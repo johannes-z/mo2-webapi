@@ -1,30 +1,36 @@
-from flask import Flask
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from . import config
 from .log import log
 from .routes import register_routes
 
-app = Flask(__name__)
-app.config["JSON_SORT_KEYS"] = False
+app = FastAPI(
+	title="MO2 WebAPI",
+	version=config.API_VERSION,
+	openapi_url="/openapi.json",
+	docs_url="/docs",
+	redoc_url="/redoc",
+)
+
+app.add_middleware(
+	CORSMiddleware,
+	allow_origins=config.CORS_ALLOW_ORIGIN.split(",") if "," in config.CORS_ALLOW_ORIGIN else [config.CORS_ALLOW_ORIGIN],
+	allow_methods=config.CORS_ALLOW_METHODS.split(","),
+	allow_headers=config.CORS_ALLOW_HEADERS.split(","),
+)
 
 
-@app.after_request
-def add_cors_headers(response):
-	response.headers["Access-Control-Allow-Origin"] = config.CORS_ALLOW_ORIGIN
-	response.headers["Access-Control-Allow-Methods"] = config.CORS_ALLOW_METHODS
-	response.headers["Access-Control-Allow-Headers"] = config.CORS_ALLOW_HEADERS
-	return response
+@app.exception_handler(404)
+async def not_found(request, exc):
+	return JSONResponse(content={"error": "Endpoint not found"}, status_code=404)
 
 
-@app.errorhandler(404)
-def not_found(error):
-	return {"error": "Endpoint not found"}, 404
-
-
-@app.errorhandler(500)
-def internal_error(error):
-	log.error(f"Internal server error: {error}")
-	return {"error": "Internal server error"}, 500
+@app.exception_handler(500)
+async def internal_error(request, exc):
+	log.error(f"Internal server error: {exc}")
+	return JSONResponse(content={"error": "Internal server error"}, status_code=500)
 
 
 register_routes(app)
@@ -38,7 +44,7 @@ def shutdown_server() -> None:
 		return
 	log.info("Shutting down HTTP server")
 	try:
-		_server.shutdown()
+		_server.should_exit = True
 	except Exception as e:
 		log.error(f"Error during HTTP server shutdown: {e}")
 	_server = None
@@ -46,11 +52,12 @@ def shutdown_server() -> None:
 
 def run_server(port: int) -> None:
 	global _server
-	from werkzeug.serving import make_server
+	from uvicorn import Config, Server
+	config_ = Config(app=app, host="0.0.0.0", port=port, log_level="warning", log_config=None)
+	_server = Server(config_)
 	try:
-		log.info(f"Starting Flask HTTP server on port {port}")
-		_server = make_server("0.0.0.0", port, app, threaded=True)
-		_server.serve_forever()
+		log.info(f"Starting FastAPI HTTP server on port {port}")
+		_server.run()
 	except Exception as e:
 		log.error(f"Failed to start HTTP server on port {port}: {e}")
 	finally:

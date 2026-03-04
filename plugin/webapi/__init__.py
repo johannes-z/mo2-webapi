@@ -2,9 +2,9 @@
 import sys
 from pathlib import Path
 
-_flask_lib = Path(__file__).parent.parent / "flask_lib"
-if _flask_lib.exists() and str(_flask_lib) not in sys.path:
-	sys.path.insert(0, str(_flask_lib))
+_webapi_lib = Path(__file__).parent.parent / "webapi_lib"
+if _webapi_lib.exists() and str(_webapi_lib) not in sys.path:
+	sys.path.insert(0, str(_webapi_lib))
 
 from .plugin import WebAPIPlugin
 

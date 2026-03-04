@@ -105,7 +105,6 @@ def _scan_vfs_recursive(organizer: mobase.IOrganizer) -> list[tuple[str, list[st
 	log.info(f"VFS recursive scan: {len(result)} files across {dir_count} directories")
 	return result
 
-
 def _build_summaries(files_data: list[tuple[str, list[str]]]) -> tuple[Dict[str, Dict], Dict[str, int], int]:
 	# origins[0] = winning mod (highest priority)
 	summaries: Dict[str, Dict] = {}
