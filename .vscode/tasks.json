@@ -1,0 +1,11 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "restart MO2",
+      "type": "shell",
+      "command": "Stop-Process -Name ModOrganizer -ErrorAction SilentlyContinue; Start-Sleep -Milliseconds 500; Start-Process 'E:/Mod Organizer Skyrim/ModOrganizer.exe'",
+      "problemMatcher": []
+    }
+  ]
+}

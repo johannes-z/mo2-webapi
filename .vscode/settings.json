@@ -1,0 +1,61 @@
+{
+  // Formatting
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "always",
+    "source.fixAll": "always"
+  },
+
+  // Editor behavior
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "editor.detectIndentation": false,
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
+  "editor.renderWhitespace": "boundary",
+  "editor.renderLineHighlight": "all",
+
+  // IntelliSense & Suggestions
+  "editor.quickSuggestions": {
+    "other": true,
+    "comments": false,
+    "strings": false
+  },
+  "editor.parameterHints.enabled": true,
+  "editor.hover.enabled": "on",
+
+  "[python]": {
+    "editor.tabSize": 4,
+    "editor.detectIndentation": false,
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+    "files.trimFinalNewlines": true,
+    "editor.renderWhitespace": "boundary",
+    "editor.renderLineHighlight": "all",
+
+    // Pylance (language server + type checker)
+    "python.languageServer": "Pylance",
+    "python.analysis.typeCheckingMode": "basic", // or "strict"
+    "python.analysis.autoImportCompletions": true,
+    "python.analysis.diagnosticMode": "openFilesOnly",
+
+    // Testing
+    "python.testing.pytestEnabled": true,
+    "python.testing.pytestArgs": ["tests"],
+    "python.testing.unittestEnabled": false,
+
+  },
+
+  // Exclude common clutter
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/*.pyc": true,
+    ".venv": true
+  },
+  "search.exclude": {
+    "**/__pycache__": true,
+    "**/*.pyc": true,
+    ".venv": true
+  }
+}

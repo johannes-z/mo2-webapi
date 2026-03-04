@@ -8,16 +8,12 @@ __pycache__/
 logs/
 
 # Monorepo / Frontend
-plugin/dist/
-api-explorer/dist/
-frontend/dist/
 release/
 .vite/
 dist/
 node_modules/
 
 # IDEs
-.vscode/
 .idea/
 *.swp
 *.swo
