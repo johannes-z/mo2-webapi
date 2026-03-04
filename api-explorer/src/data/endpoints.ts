@@ -28,7 +28,7 @@ export const sections: SectionDef[] = [
         docs: [
           {
             title: "Response",
-            content: '{"status": "ok", "version": "1.1.0"}',
+            content: '{"status": "ok", "version": "1.0.0"}',
           },
         ],
       },

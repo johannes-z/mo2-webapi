@@ -120,8 +120,6 @@ def _build_summaries(files_data: list[tuple[str, list[str]]]) -> tuple[Dict[str,
 			continue
 
 		conflict_count += 1
-		if conflict_count <= 10:
-			log.info(f"  Conflict: {path} -> {origins}")
 
 		winner = origins[0]
 		losers = origins[1:]

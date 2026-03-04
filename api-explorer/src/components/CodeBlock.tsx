@@ -27,7 +27,7 @@ export function CodeBlock({ code, lang = "json" }: CodeBlockProps) {
   if (!html) return <pre className={blockClass}>Loading…</pre>;
   return (
     <div
-      className={`${blockClass} [&_pre]:m-0 [&_pre]:!bg-transparent`}
+      className={`${blockClass} [&_pre]:m-0 [&_pre]:bg-transparent!`}
       dangerouslySetInnerHTML={{ __html: html }}
     />
   );

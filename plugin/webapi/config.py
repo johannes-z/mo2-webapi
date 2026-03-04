@@ -70,7 +70,4 @@ CORS_ALLOW_METHODS = _cfg.get("cors", "allow_methods")
 CORS_ALLOW_HEADERS = _cfg.get("cors", "allow_headers")
 
 # API
-API_VERSION = "1.1.0"
-
-# Dev
-DEV_ENDPOINT_ENABLED = _cfg.getboolean("dev", "dev_endpoint")
+API_VERSION = "1.0.0"

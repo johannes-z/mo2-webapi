@@ -19,7 +19,7 @@ if _flask_lib.is_dir() and str(_flask_lib) not in sys.path:
 
 from webapi.plugin import WebAPIPlugin
 
-__version__ = "1.1.0"
+__version__ = "1.0.0"
 __author__ = "johannes-z"
 
 
