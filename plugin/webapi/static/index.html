@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>MO2 WebAPI – API Overview</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+	<style>
+		:root {
+			--bg: #0f0f12;
+			--surface: #18181c;
+			--border: #2a2a30;
+			--text: #e4e4e7;
+			--text-muted: #a1a1aa;
+			--accent: #7c3aed;
+			--accent-hover: #8b5cf6;
+			--get: #22c55e;
+			--post: #3b82f6;
+			--patch: #f59e0b;
+			--put: #8b5cf6;
+			--delete: #ef4444;
+		}
+		* { box-sizing: border-box; }
+		body {
+			font-family: 'DM Sans', system-ui, sans-serif;
+			background: var(--bg);
+			color: var(--text);
+			line-height: 1.6;
+			margin: 0;
+			padding: 2rem 1rem 4rem;
+			min-height: 100vh;
+		}
+		.container { max-width: 820px; margin: 0 auto; }
+		h1 {
+			font-size: 1.75rem;
+			font-weight: 600;
+			margin: 0 0 0.5rem;
+			letter-spacing: -0.02em;
+		}
+		.subtitle {
+			color: var(--text-muted);
+			font-size: 0.95rem;
+			margin-bottom: 2rem;
+		}
+		.section-title {
+			font-size: 0.8rem;
+			font-weight: 600;
+			text-transform: uppercase;
+			letter-spacing: 0.08em;
+			color: var(--text-muted);
+			margin: 2rem 0 0.75rem;
+			padding-bottom: 0.25rem;
+		}
+		.endpoint {
+			background: var(--surface);
+			border: 1px solid var(--border);
+			border-radius: 8px;
+			margin-bottom: 0.5rem;
+			overflow: hidden;
+		}
+		.endpoint summary {
+			list-style: none;
+			padding: 0.85rem 1rem;
+			cursor: pointer;
+			display: flex;
+			align-items: center;
+			gap: 0.75rem;
+			font-weight: 500;
+		}
+		.endpoint summary::-webkit-details-marker { display: none; }
+		.endpoint summary::before {
+			content: '▶';
+			font-size: 0.65rem;
+			opacity: 0.6;
+			transition: transform 0.15s ease;
+		}
+		.endpoint[open] summary::before { transform: rotate(90deg); }
+		.method {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.7rem;
+			font-weight: 500;
+			padding: 0.2rem 0.45rem;
+			border-radius: 4px;
+			min-width: 3.2rem;
+			text-align: center;
+		}
+		.method.get { background: rgba(34, 197, 94, 0.2); color: var(--get); }
+		.method.post { background: rgba(59, 130, 246, 0.2); color: var(--post); }
+		.method.patch { background: rgba(245, 158, 11, 0.2); color: var(--patch); }
+		.method.put { background: rgba(139, 92, 246, 0.2); color: var(--put); }
+		.method.delete { background: rgba(239, 68, 68, 0.2); color: var(--delete); }
+		.path { font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; color: var(--text); }
+		.endpoint-body {
+			padding: 1rem 1rem 1rem;
+			border-top: 1px solid var(--border);
+		}
+		.endpoint-body > .endpoint-docs > div { margin-top: 1rem; }
+		.endpoint-body > .endpoint-docs > div:first-child { margin-top: 0; }
+		.endpoint-body h4 {
+			font-size: 0.7rem;
+			text-transform: uppercase;
+			letter-spacing: 0.05em;
+			color: var(--text-muted);
+			margin: 0.75rem 0 0.35rem;
+		}
+		.endpoint-body h4:first-child { margin-top: 0; }
+		.endpoint-body p { margin: 0.75rem 0 0.5rem; font-size: 0.9rem; color: var(--text-muted); }
+		.endpoint-body p:first-child { margin-top: 0; }
+		.endpoint-body pre {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.8rem;
+			background: var(--bg);
+			border: 1px solid var(--border);
+			border-radius: 6px;
+			padding: 0.75rem 1rem;
+			margin: 0;
+			overflow-x: auto;
+			white-space: pre-wrap;
+			word-break: break-word;
+		}
+		.try-open {
+			margin-top: 1rem;
+			padding: 0.4rem 0.85rem;
+			background: var(--accent);
+			color: #fff;
+			border: none;
+			border-radius: 6px;
+			font-size: 0.85rem;
+			font-weight: 600;
+			cursor: pointer;
+		}
+		.try-open:hover { background: var(--accent-hover); }
+		.try-inline {
+			margin-top: 1rem;
+			padding-top: 1rem;
+			border-top: 1px solid var(--border);
+		}
+		.try-inline label { display: block; margin-top: 0.6rem; font-size: 0.8rem; color: var(--text-muted); }
+		.try-inline input, .try-inline textarea {
+			width: 100%;
+			padding: 0.45rem 0.6rem;
+			margin-top: 0.2rem;
+			background: var(--bg);
+			border: 1px solid var(--border);
+			border-radius: 6px;
+			color: var(--text);
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.85rem;
+		}
+		.try-inline textarea { min-height: 80px; resize: vertical; }
+		.try-inline .try-send {
+			margin-top: 0.75rem;
+			padding: 0.45rem 1rem;
+			background: var(--accent);
+			color: #fff;
+			border: none;
+			border-radius: 6px;
+			font-size: 0.85rem;
+			font-weight: 600;
+			cursor: pointer;
+		}
+		.try-inline .try-send:hover { background: var(--accent-hover); }
+		.try-inline .try-response {
+			margin-top: 0.75rem;
+			min-height: 3rem;
+			font-size: 0.8rem;
+		}
+		.try-inline .try-response.ok { border-color: var(--get); }
+		.try-inline .try-response.error { border-color: var(--delete); }
+		.base-url-row {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			margin-bottom: 2rem;
+			font-size: 0.9rem;
+			color: var(--text-muted);
+		}
+		.base-url-row input {
+			flex: 1;
+			max-width: 320px;
+			padding: 0.4rem 0.6rem;
+			background: var(--surface);
+			border: 1px solid var(--border);
+			border-radius: 6px;
+			color: var(--text);
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.9rem;
+		}
+	</style>
+</head>
+<body>
+	<div class="container">
+		<h1>MO2 WebAPI</h1>
+		<p class="subtitle">API overview for Mod Organizer 2.</p>
+		<p class="base-url-row">Base URL: <input type="text" id="baseUrl" value="http://localhost:5000" placeholder="http://localhost:5000"></p>
+
+		<p class="section-title">Health</p>
+		<details class="endpoint" data-method="GET" data-path="/health" data-body="">
+			<summary><span class="method get">GET</span><span class="path">/health</span></summary>
+			<div class="endpoint-body">
+				<div class="endpoint-docs">
+					<div><h4>Response</h4><pre>{"status": "ok", "version": "1.1.0"}</pre></div>
+				</div>
+				<button type="button" class="try-open">Try it</button>
+				<div class="try-inline" hidden>
+					<label>Path</label><input type="text" class="try-path" value="/health">
+					<button type="button" class="try-send">Send</button>
+					<pre class="try-response">(click Send)</pre>
+				</div>
+			</div>
+		</details>
+
+		<p class="section-title">Mods – List &amp; query</p>
+		<details class="endpoint" data-method="GET" data-path="/mods" data-body="">
+			<summary><span class="method get">GET</span><span class="path">/mods</span></summary>
+			<div class="endpoint-body">
+				<div class="endpoint-docs">
+					<p>All installed mods with full info.</p>
+					<h4>Response</h4>
+					<pre>[{ "name", "isEnabled", "version", "priority", "nexusId", "categories", "conflicts", "meta", ... }]</pre>
+				</div>
+				<button type="button" class="try-open">Try it</button>
+				<div class="try-inline" hidden><label>Path</label><input type="text" class="try-path" value="/mods"><button type="button" class="try-send">Send</button><pre class="try-response">(click Send)</pre></div>
+			</div>
+		</details>
+		<details class="endpoint" data-method="GET" data-path="/mods/list" data-body="">
+			<summary><span class="method get">GET</span><span class="path">/mods/list</span></summary>
+			<div class="endpoint-body">
+				<div class="endpoint-docs">
+					<p>Lightweight list: name, isEnabled, priority only.</p>
+					<h4>Response</h4>
+					<pre>[{ "name", "isEnabled", "priority" }]</pre>
+				</div>
+				<button type="button" class="try-open">Try it</button>
+				<div class="try-inline" hidden><label>Path</label><input type="text" class="try-path" value="/mods/list"><button type="button" class="try-send">Send</button><pre class="try-response">(click Send)</pre></div>
+			</div>
+		</details>
+		<details class="endpoint" data-method="GET" data-path="/mods/enabled" data-body="">
+			<summary><span class="method get">GET</span><span class="path">/mods/enabled</span></summary>
+			<div class="endpoint-body">
+				<div class="endpoint-docs"><p>Enabled mods only.</p></div>
+				<button type="button" class="try-open">Try it</button>
+				<div class="try-inline" hidden><label>Path</label><input type="text" class="try-path" value="/mods/enabled"><button type="button" class="try-send">Send</button><pre class="try-response">(click Send)</pre></div>
+			</div>
+		</details>
+		<details class="endpoint" data-method="GET" data-path="/mods/disabled" data-body="">
+			<summary><span class="method get">GET</span><span class="path">/mods/disabled</span></summary>
+			<div class="endpoint-body">
+				<div class="endpoint-docs"><p>Disabled mods only.</p></div>
+				<button type="button" class="try-open">Try it</button>
+				<div class="try-inline" hidden><label>Path</label><input type="text" class="try-path" value="/mods/disabled"><button type="button" class="try-send">Send</button><pre class="try-response">(click Send)</pre></div>
+			</div>
+		</details>
+		<details class="endpoint" data-method="GET" data-path="/mods/priority" data-body="">
+			<summary><span class="method get">GET</span><span class="path">/mods/priority</span></summary>
+			<div class="endpoint-body">
+				<div class="endpoint-docs"><h4>Response</h4><pre>[{ "name", "priority" }]</pre></div>
+				<button type="button" class="try-open">Try it</button>
+				<div class="try-inline" hidden><label>Path</label><input type="text" class="try-path" value="/mods/priority"><button type="button" class="try-send">Send</button><pre class="try-response">(click Send)</pre></div>
+			</div>
+		</details>
+		<details class="endpoint" data-method="GET" data-path="/mods/search?q=skyui" data-body="">
+			<summary><span class="method get">GET</span><span class="path">/mods/search?q={query}</span></summary>
+			<div class="endpoint-body">
+				<div class="endpoint-docs">
+					<p>Search by name (case-insensitive).</p>
+					<h4>Query</h4>
+					<pre>q (required): string</pre>
+				</div>
+				<button type="button" class="try-open">Try it</button>
+				<div class="try-inline" hidden><label>Path</label><input type="text" class="try-path" value="/mods/search?q=skyui"><button type="button" class="try-send">Send</button><pre class="try-response">(click Send)</pre></div>
+			</div>
+		</details>
+		<details class="endpoint" data-method="GET" data-path="/mods/MyMod" data-body="">
+			<summary><span class="method get">GET</span><span class="path">/mods/{mod_name}</span></summary>
+			<div class="endpoint-body">
+				<div class="endpoint-docs">
+					<p>Single mod info.</p>
+					<h4>Response</h4>
+					<pre>{ "name", "isEnabled", "version", "priority", "conflicts", "meta", ... }</pre>
+					<h4>Error 404</h4>
+					<pre>{"error": "Mod '...' not found"}</pre>
+				</div>
+				<button type="button" class="try-open">Try it</button>
+				<div class="try-inline" hidden><label>Path</label><input type="text" class="try-path" value="/mods/MyMod" placeholder="/mods/ModName"><button type="button" class="try-send">Send</button><pre class="try-response">(click Send)</pre></div>
+			</div>
+		</details>
+		<details class="endpoint" data-method="GET" data-path="/mods/meta" data-body="">
+			<summary><span class="method get">GET</span><span class="path">/mods/meta</span></summary>
+			<div class="endpoint-body">
+				<div class="endpoint-docs"><p>All mods’ custom metadata (key-value).</p><h4>Response</h4><pre>{"ModName": {"key": "value", ...}, ...}</pre></div>
+				<button type="button" class="try-open">Try it</button>
+				<div class="try-inline" hidden><label>Path</label><input type="text" class="try-path" value="/mods/meta"><button type="button" class="try-send">Send</button><pre class="try-response">(click Send)</pre></div>
+			</div>
+		</details>
+
+		<p class="section-title">Mods – Conflicts</p>
+		<details class="endpoint" data-method="GET" data-path="/mods/conflicts" data-body="">
+			<summary><span class="method get">GET</span><span class="path">/mods/conflicts</span></summary>
+			<div class="endpoint-body">
+				<div class="endpoint-docs">
+					<p>Conflict summaries for all mods. Use <code>?refresh=true</code> to force recompute.</p>
+					<h4>Query</h4>
+					<pre>refresh (optional): true | 1</pre>
+					<h4>Response</h4>
+					<pre>{"ModName": { "overwriting", "overridden", "overwritingMods", "overriddenByMods" }, ...}</pre>
+				</div>
+				<button type="button" class="try-open">Try it</button>
+				<div class="try-inline" hidden><label>Path</label><input type="text" class="try-path" value="/mods/conflicts"><button type="button" class="try-send">Send</button><pre class="try-response">(click Send)</pre></div>
+			</div>
+		</details>
+		<details class="endpoint" data-method="GET" data-path="/mods/MyMod/conflicts" data-body="">
+			<summary><span class="method get">GET</span><span class="path">/mods/{mod_name}/conflicts</span></summary>
+			<div class="endpoint-body">
+				<div class="endpoint-docs">
+					<p>File-level conflicts for one mod. <code>?refresh=true</code> to recompute cache.</p>
+					<h4>Response</h4>
+					<pre>{ "winning": [{ "file", "overwriting" }], "losing": [{ "file", "overwrittenBy" }], "winningCount", "losingCount" }</pre>
+				</div>
+				<button type="button" class="try-open">Try it</button>
+				<div class="try-inline" hidden><label>Path</label><input type="text" class="try-path" value="/mods/MyMod/conflicts"><button type="button" class="try-send">Send</button><pre class="try-response">(click Send)</pre></div>
+			</div>
+		</details>
+
+		<p class="section-title">Mods – State</p>
+		<details class="endpoint" data-method="PATCH" data-path="/mods/enable" data-body='{"name": "ModName"}'>
+			<summary><span class="method patch">PATCH</span><span class="path">/mods/enable</span></summary>
+			<div class="endpoint-body">
+				<div class="endpoint-docs"><h4>Request</h4><pre>{"name": "ModName"}</pre></div>
+				<button type="button" class="try-open">Try it</button>
+				<div class="try-inline" hidden><label>Path</label><input type="text" class="try-path" value="/mods/enable"><label>Body</label><textarea class="try-body">{"name": "ModName"}</textarea><button type="button" class="try-send">Send</button><pre class="try-response">(click Send)</pre></div>
+			</div>
+		</details>
+		<details class="endpoint" data-method="PATCH" data-path="/mods/disable" data-body='{"name": "ModName"}'>
+			<summary><span class="method patch">PATCH</span><span class="path">/mods/disable</span></summary>
+			<div class="endpoint-body">
+				<div class="endpoint-docs"><h4>Request</h4><pre>{"name": "ModName"}</pre></div>
+				<button type="button" class="try-open">Try it</button>
+				<div class="try-inline" hidden><label>Path</label><input type="text" class="try-path" value="/mods/disable"><label>Body</label><textarea class="try-body">{"name": "ModName"}</textarea><button type="button" class="try-send">Send</button><pre class="try-response">(click Send)</pre></div>
+			</div>
+		</details>
+		<details class="endpoint" data-method="PATCH" data-path="/mods/toggle" data-body='{"name": "ModName"}'>
+			<summary><span class="method patch">PATCH</span><span class="path">/mods/toggle</span></summary>
+			<div class="endpoint-body">
+				<div class="endpoint-docs"><h4>Request</h4><pre>{"name": "ModName"}</pre></div>
+				<button type="button" class="try-open">Try it</button>
+				<div class="try-inline" hidden><label>Path</label><input type="text" class="try-path" value="/mods/toggle"><label>Body</label><textarea class="try-body">{"name": "ModName"}</textarea><button type="button" class="try-send">Send</button><pre class="try-response">(click Send)</pre></div>
+			</div>
+		</details>
+		<details class="endpoint" data-method="PATCH" data-path="/mods/state" data-body='[{"name": "ModA", "state": true}]'>
+			<summary><span class="method patch">PATCH</span><span class="path">/mods/state</span></summary>
+			<div class="endpoint-body">
+				<div class="endpoint-docs"><h4>Request</h4><pre>[{"name": "ModA", "state": true}, {"name": "ModB", "state": false}]</pre></div>
+				<button type="button" class="try-open">Try it</button>
+				<div class="try-inline" hidden><label>Path</label><input type="text" class="try-path" value="/mods/state"><label>Body</label><textarea class="try-body">[{"name": "ModA", "state": true}]</textarea><button type="button" class="try-send">Send</button><pre class="try-response">(click Send)</pre></div>
+			</div>
+		</details>
+		<details class="endpoint" data-method="PATCH" data-path="/mods/set-priority" data-body='{"name": "ModName", "priority": 0}'>
+			<summary><span class="method patch">PATCH</span><span class="path">/mods/set-priority</span></summary>
+			<div class="endpoint-body">
+				<div class="endpoint-docs"><h4>Request</h4><pre>{"name": "ModName", "priority": 0}</pre></div>
+				<button type="button" class="try-open">Try it</button>
+				<div class="try-inline" hidden><label>Path</label><input type="text" class="try-path" value="/mods/set-priority"><label>Body</label><textarea class="try-body">{"name": "ModName", "priority": 0}</textarea><button type="button" class="try-send">Send</button><pre class="try-response">(click Send)</pre></div>
+			</div>
+		</details>
+		<details class="endpoint" data-method="PATCH" data-path="/mods/MyMod/rename" data-body='{"newName": "NewModName"}'>
+			<summary><span class="method patch">PATCH</span><span class="path">/mods/{mod_name}/rename</span></summary>
+			<div class="endpoint-body">
+				<div class="endpoint-docs"><h4>Request</h4><pre>{"newName": "NewModName"}</pre></div>
+				<button type="button" class="try-open">Try it</button>
+				<div class="try-inline" hidden><label>Path</label><input type="text" class="try-path" value="/mods/MyMod/rename"><label>Body</label><textarea class="try-body">{"newName": "NewModName"}</textarea><button type="button" class="try-send">Send</button><pre class="try-response">(click Send)</pre></div>
+			</div>
+		</details>
+		<details class="endpoint" data-method="DELETE" data-path="/mods/MyMod" data-body="">
+			<summary><span class="method delete">DELETE</span><span class="path">/mods/{mod_name}</span></summary>
+			<div class="endpoint-body">
+				<div class="endpoint-docs"><p>Uninstall/remove mod. 200 empty body.</p></div>
+				<button type="button" class="try-open">Try it</button>
+				<div class="try-inline" hidden><label>Path</label><input type="text" class="try-path" value="/mods/MyMod"><button type="button" class="try-send">Send</button><pre class="try-response">(click Send)</pre></div>
+			</div>
+		</details>
+		<details class="endpoint" data-method="PATCH" data-path="/mods/enable-batch" data-body='{"names": ["ModA", "ModB"]}'>
+			<summary><span class="method patch">PATCH</span><span class="path">/mods/enable-batch</span></summary>
+			<div class="endpoint-body">
+				<div class="endpoint-docs"><h4>Request</h4><pre>{"names": ["ModA", "ModB"]}</pre></div>
+				<button type="button" class="try-open">Try it</button>
+				<div class="try-inline" hidden><label>Path</label><input type="text" class="try-path" value="/mods/enable-batch"><label>Body</label><textarea class="try-body">{"names": ["ModA", "ModB"]}</textarea><button type="button" class="try-send">Send</button><pre class="try-response">(click Send)</pre></div>
+			</div>
+		</details>
+		<details class="endpoint" data-method="PATCH" data-path="/mods/disable-batch" data-body='{"names": ["ModA", "ModB"]}'>
+			<summary><span class="method patch">PATCH</span><span class="path">/mods/disable-batch</span></summary>
+			<div class="endpoint-body">
+				<div class="endpoint-docs"><h4>Request</h4><pre>{"names": ["ModA", "ModB"]}</pre></div>
+				<button type="button" class="try-open">Try it</button>
+				<div class="try-inline" hidden><label>Path</label><input type="text" class="try-path" value="/mods/disable-batch"><label>Body</label><textarea class="try-body">{"names": ["ModA", "ModB"]}</textarea><button type="button" class="try-send">Send</button><pre class="try-response">(click Send)</pre></div>
+			</div>
+		</details>
+
+		<p class="section-title">Mods – Metadata</p>
+		<details class="endpoint" data-method="GET" data-path="/mods/MyMod/meta" data-body="">
+			<summary><span class="method get">GET</span><span class="path">/mods/{mod_name}/meta</span></summary>
+			<div class="endpoint-body">
+				<div class="endpoint-docs"><h4>Response</h4><pre>{"key": "value", ...}</pre></div>
+				<button type="button" class="try-open">Try it</button>
+				<div class="try-inline" hidden><label>Path</label><input type="text" class="try-path" value="/mods/MyMod/meta"><button type="button" class="try-send">Send</button><pre class="try-response">(click Send)</pre></div>
+			</div>
+		</details>
+		<details class="endpoint" data-method="GET" data-path="/mods/MyMod/meta/key" data-body="">
+			<summary><span class="method get">GET</span><span class="path">/mods/{mod_name}/meta/{key}</span></summary>
+			<div class="endpoint-body">
+				<div class="endpoint-docs"><h4>Response</h4><pre>{"mod", "key", "value"}</pre></div>
+				<button type="button" class="try-open">Try it</button>
+				<div class="try-inline" hidden><label>Path</label><input type="text" class="try-path" value="/mods/MyMod/meta/key"><button type="button" class="try-send">Send</button><pre class="try-response">(click Send)</pre></div>
+			</div>
+		</details>
+		<details class="endpoint" data-method="PATCH" data-path="/mods/MyMod/meta" data-body='{"data": {"key1": "value1"}}'>
+			<summary><span class="method patch">PATCH</span><span class="path">/mods/{mod_name}/meta</span></summary>
+			<div class="endpoint-body">
+				<div class="endpoint-docs"><h4>Request</h4><pre>{"data": {"key1": "value1", "key2": "value2"}}</pre></div>
+				<button type="button" class="try-open">Try it</button>
+				<div class="try-inline" hidden><label>Path</label><input type="text" class="try-path" value="/mods/MyMod/meta"><label>Body</label><textarea class="try-body">{"data": {"key1": "value1"}}</textarea><button type="button" class="try-send">Send</button><pre class="try-response">(click Send)</pre></div>
+			</div>
+		</details>
+		<details class="endpoint" data-method="PUT" data-path="/mods/MyMod/meta/key" data-body='{"value": "value1"}'>
+			<summary><span class="method put">PUT</span><span class="path">/mods/{mod_name}/meta/{key}</span></summary>
+			<div class="endpoint-body">
+				<div class="endpoint-docs"><h4>Request</h4><pre>{"value": "string or number"}</pre></div>
+				<button type="button" class="try-open">Try it</button>
+				<div class="try-inline" hidden><label>Path</label><input type="text" class="try-path" value="/mods/MyMod/meta/key"><label>Body</label><textarea class="try-body">{"value": "value1"}</textarea><button type="button" class="try-send">Send</button><pre class="try-response">(click Send)</pre></div>
+			</div>
+		</details>
+		<details class="endpoint" data-method="DELETE" data-path="/mods/MyMod/meta/key" data-body="">
+			<summary><span class="method delete">DELETE</span><span class="path">/mods/{mod_name}/meta/{key}</span></summary>
+			<div class="endpoint-body">
+				<div class="endpoint-docs"><p>Remove one key. 200 empty body.</p></div>
+				<button type="button" class="try-open">Try it</button>
+				<div class="try-inline" hidden><label>Path</label><input type="text" class="try-path" value="/mods/MyMod/meta/key"><button type="button" class="try-send">Send</button><pre class="try-response">(click Send)</pre></div>
+			</div>
+		</details>
+
+		<p class="section-title">Profile</p>
+		<details class="endpoint" data-method="GET" data-path="/profile" data-body="">
+			<summary><span class="method get">GET</span><span class="path">/profile</span></summary>
+			<div class="endpoint-body">
+				<div class="endpoint-docs"><h4>Response</h4><pre>{"name": "Default"}</pre></div>
+				<button type="button" class="try-open">Try it</button>
+				<div class="try-inline" hidden><label>Path</label><input type="text" class="try-path" value="/profile"><button type="button" class="try-send">Send</button><pre class="try-response">(click Send)</pre></div>
+			</div>
+		</details>
+		<details class="endpoint" data-method="GET" data-path="/profiles" data-body="">
+			<summary><span class="method get">GET</span><span class="path">/profiles</span></summary>
+			<div class="endpoint-body">
+				<div class="endpoint-docs"><h4>Response</h4><pre>{"current": "Default", "profiles": ["Default", "Other"]}</pre></div>
+				<button type="button" class="try-open">Try it</button>
+				<div class="try-inline" hidden><label>Path</label><input type="text" class="try-path" value="/profiles"><button type="button" class="try-send">Send</button><pre class="try-response">(click Send)</pre></div>
+			</div>
+		</details>
+		<details class="endpoint" data-method="GET" data-path="/profiles/Default" data-body="">
+			<summary><span class="method get">GET</span><span class="path">/profiles/{profile_name}</span></summary>
+			<div class="endpoint-body">
+				<div class="endpoint-docs">
+					<p>Mod list for that profile (from modlist.txt).</p>
+					<h4>Response</h4>
+					<pre>{"name", "isCurrent", "mods": [{ "name", "isEnabled", "priority" }]}</pre>
+				</div>
+				<button type="button" class="try-open">Try it</button>
+				<div class="try-inline" hidden><label>Path</label><input type="text" class="try-path" value="/profiles/Default"><button type="button" class="try-send">Send</button><pre class="try-response">(click Send)</pre></div>
+			</div>
+		</details>
+		<details class="endpoint" data-method="POST" data-path="/profiles/Default/activate" data-body="">
+			<summary><span class="method post">POST</span><span class="path">/profiles/{profile_name}/activate</span></summary>
+			<div class="endpoint-body">
+				<div class="endpoint-docs">
+					<p>Not supported by mobase API. Returns 501.</p>
+					<h4>Response 501</h4>
+					<pre>{"error": "...", "hint": "Profile changes must be made through the MO2 UI"}</pre>
+				</div>
+				<button type="button" class="try-open">Try it</button>
+				<div class="try-inline" hidden><label>Path</label><input type="text" class="try-path" value="/profiles/Default/activate"><button type="button" class="try-send">Send</button><pre class="try-response">(click Send)</pre></div>
+			</div>
+		</details>
+	</div>
+
+	<script>
+		const baseUrlEl = document.getElementById('baseUrl');
+		document.addEventListener('click', (e) => {
+			if (e.target.classList.contains('try-open')) {
+				const inline = e.target.nextElementSibling;
+				inline.hidden = !inline.hidden;
+				if (!inline.hidden) {
+					const pathInput = inline.querySelector('.try-path');
+					if (pathInput) pathInput.value = e.target.closest('.endpoint').dataset.path || pathInput.value;
+					const bodyTa = inline.querySelector('.try-body');
+					if (bodyTa) bodyTa.value = e.target.closest('.endpoint').dataset.body || '';
+				}
+				return;
+			}
+			if (e.target.classList.contains('try-send')) {
+				const inline = e.target.closest('.try-inline');
+				const endpoint = inline.closest('.endpoint');
+				const base = (baseUrlEl.value || '').replace(/\/$/, '');
+				const pathInput = inline.querySelector('.try-path');
+				const path = (pathInput && pathInput.value || '').replace(/^\//, '/');
+				const url = base + path;
+				const method = endpoint.dataset.method || 'GET';
+				const bodyTa = inline.querySelector('.try-body');
+				const body = (bodyTa && bodyTa.value || '').trim();
+				const responseEl = inline.querySelector('.try-response');
+				responseEl.textContent = 'Loading...';
+				responseEl.className = '';
+				(async () => {
+					try {
+						const opts = { method };
+						if (body && ['POST', 'PATCH', 'PUT'].includes(method)) {
+							opts.headers = { 'Content-Type': 'application/json' };
+							opts.body = body;
+						}
+						const r = await fetch(url, opts);
+						const text = await r.text();
+						let data;
+						try { data = JSON.parse(text); } catch { data = text; }
+						responseEl.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+						responseEl.className = r.ok ? 'ok' : 'error';
+					} catch (err) {
+						responseEl.textContent = String(err);
+						responseEl.className = 'error';
+					}
+				})();
+			}
+		});
+	</script>
+</body>
+</html>
