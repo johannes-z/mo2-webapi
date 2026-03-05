@@ -1,22 +1,19 @@
 {
-    "name": "mo2-webapi",
-    "version": "1.0.0",
-    "private": true,
-    "packageManager": "bun@1.3.10",
-    "workspaces": [
-        "api-explorer",
-        "frontend"
-    ],
-    "scripts": {
-        "release": "bumpp",
-        "build": "bun run build:api-explorer && bun run build:frontend",
-        "build:api-explorer": "cd api-explorer && bun run build && cd .. && bun run copy:api-explorer",
-        "build:frontend": "cd frontend && bun run build && cd .. && bun run copy:frontend",
-        "copy:api-explorer": "bun run scripts/copy-api-explorer.ts",
-        "copy:frontend": "bun run scripts/copy-frontend.ts"
-    },
-    "devDependencies": {
-        "bumpp": "^10.4.1",
-        "typescript": "^5.9.3"
-    }
+  "name": "mo2-webapi",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "bun@1.3.10",
+  "workspaces": [
+    "frontend"
+  ],
+  "scripts": {
+    "release": "bumpp",
+    "build": "bun run build:frontend",
+    "build:frontend": "cd frontend && bun run build && cd .. && bun run copy:frontend",
+    "copy:frontend": "bun run scripts/copy-frontend.ts"
+  },
+  "devDependencies": {
+    "bumpp": "^10.4.1",
+    "typescript": "^5.9.3"
+  }
 }

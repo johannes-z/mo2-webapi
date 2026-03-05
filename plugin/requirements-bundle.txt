@@ -1,6 +1,6 @@
 # Dependencies to bundle into plugin/webapi_lib for MO2's embedded Python.
 # Used by CI to populate webapi_lib/ before creating the release zip.
-# Install with: pip install -r plugin/requirements-bundle.txt -t plugin/webapi_lib
+# Install with: py -3.12 -m pip install -r plugin\requirements-bundle.txt -t plugin\webapi_lib --upgrade --platform win_amd64 --only-binary=:all:
 
 # MO2 WebAPI Plugin Dependencies
 

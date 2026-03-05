@@ -6,12 +6,20 @@ from . import config
 from .log import log
 from .routes import register_routes
 
+OPENAPI_TAGS = [
+	{"name": "Health", "description": "Server health and configuration."},
+	{"name": "Mods", "description": "List, query, enable/disable, and manage mod metadata and conflicts."},
+	{"name": "Profile", "description": "Current profile and profile list (activation not supported via API)."},
+]
+
 app = FastAPI(
 	title="MO2 WebAPI",
+	description="REST API for Mod Organizer 2: query and manage mods, metadata, conflicts, and profiles.",
 	version=config.API_VERSION,
 	openapi_url="/openapi.json",
 	docs_url="/docs",
 	redoc_url="/redoc",
+	openapi_tags=OPENAPI_TAGS,
 )
 
 app.add_middleware(

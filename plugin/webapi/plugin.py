@@ -81,7 +81,6 @@ class WebAPIPlugin(mobase.IPlugin):
 			name="WebAPI-HTTP-Server",
 		)
 		self._server_thread.start()
-		log.info(f"HTTP server starting on port {self._http_port}")
 		self._websocket_thread = threading.Thread(
 			target=server_websocket.start_server,
 			kwargs={"port": self._websocket_port},
@@ -89,7 +88,6 @@ class WebAPIPlugin(mobase.IPlugin):
 			name="WebAPI-WebSocket-Server",
 		)
 		self._websocket_thread.start()
-		log.info(f"WebSocket server starting on port {self._websocket_port}")
 
 	def name(self) -> str:
 		return "WebAPIPlugin"
